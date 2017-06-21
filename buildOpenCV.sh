@@ -1,5 +1,7 @@
 #!/bin/bash
-cd $HOME
+
+PROJECTS=${HOME}/projects
+
 sudo apt-get install -y \
     libglew-dev \
     libtiff5-dev \
@@ -19,34 +21,70 @@ sudo apt-get install -y \
     pkg-config
 
 # Python 2.7
-sudo apt-get install -y python-dev python-numpy python-py python-pytest -y
+sudo apt-get install -y python-dev python-numpy python-py python-pytest
 
-git clone https://github.com/opencv/opencv.git
+# Python 3.5
+sudo apt-get install -y python3-numpy libpython3-dev
+
+cd ${PROJECTS}/opencv
+if [ ! -d opencv ]; then
+  git clone https://github.com/opencv/opencv.git
+else
+  echo "opencv directory appears to exist, skipping checkout"
+fi
+
 cd opencv
-git checkout -b v3.2.0 3.2.0
-# This is for the test data
-cd $HOME
-git clone https://github.com/opencv/opencv_extra.git
-cd opencv_extra
+git clean -dxf
 git checkout -b v3.2.0 3.2.0
 
-cd $HOME/opencv
+
+# This is for the test data
+cd ${PROJECTS}/opencv
+if [ ! -d opencv_extra ]; then
+  git clone https://github.com/opencv/opencv_extra.git
+else
+  echo "opencv_extra directory appears to exist, skipping checkout"
+fi
+
+cd opencv_extra
+git clean -dxf
+git checkout -b v3.2.0 3.2.0
+
+cd ${PROJECTS}/opencv/opencv
 mkdir build
 cd build
 # Jetson TX2 
 cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    -DBUILD_PNG=OFF \
-    -DBUILD_TIFF=OFF \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DBUILD_PNG=ON \
+    -DWITH_PNG=ON \
+    -DBUILD_TIFF=ON \
+    -DWITH_TIFF=ON \
     -DBUILD_TBB=OFF \
-    -DBUILD_JPEG=OFF \
+    -DBUILD_JPEG=ON \
+    -DWITH_JPEG=ON \
     -DBUILD_JASPER=OFF \
-    -DBUILD_ZLIB=OFF \
     -DBUILD_EXAMPLES=ON \
-    -DBUILD_opencv_java=OFF \
+    -DBUILD_opencv_java=ON \
     -DBUILD_opencv_python2=ON \
     -DBUILD_opencv_python3=OFF \
+    -DBUILD_EXAMPLES=ON \
+    -DBUILD_opencv_java=ON \
+    -DBUILD_opencv_python2=ON \
+    -DBUILD_opencv_python3=OFF \
+    -DBUILD_opencv_apps=OFF \
+    -DBUILD_opencv_cudabgsegm=OFF \
+    -DBUILD_opencv_cudalegacy=OFF \
+    -DBUILD_opencv_cudaoptflow=OFF \
+    -DBUILD_opencv_flann=OFF \
+    -DBUILD_opencv_ml=OFF \
+    -DBUILD_opencv_photo=OFF \
+    -DBUILD_opencv_shape=OFF \
+    -DBUILD_opencv_superres=OFF \
+    -DBUILD_opencv_videostab=OFF \
+    -DBUILD_SHARE_LIBS=ON \
     -DENABLE_PRECOMPILED_HEADERS=OFF \
     -DWITH_OPENCL=OFF \
     -DWITH_OPENMP=OFF \
@@ -59,9 +97,14 @@ cmake \
     -DWITH_TBB=ON \
     -DWITH_1394=OFF \
     -DWITH_OPENEXR=OFF \
+    -DWITH_IPP=OFF \
+    -DWITH_V4L=OFF \
+    -DWITH_WEBP=OFF \
+    -DCUDA_FAST_MATH=ON \
+    -DCUDA_NVCC_FLAGS="--default-stream per-thread -O3" \
     -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-8.0 \
     -DCUDA_ARCH_BIN=6.2 \
-    -DCUDA_ARCH_PTX="" \
+    -DCUDA_ARCH_PTX=6.2 \
     -DINSTALL_C_EXAMPLES=ON \
     -DINSTALL_TESTS=ON \
     -DOPENCV_TEST_DATA_PATH=../opencv_extra/testdata \
